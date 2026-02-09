@@ -144,14 +144,6 @@
       </div>
     </div>
 
-    <!-- Schedule -->
-    <div class="mt-3 rounded-lg border border-border bg-card shadow-sm p-4">
-      <h2 class="text-sm font-semibold mb-2.5 flex items-center gap-1.5">
-        <span>📅</span> 오늘 일정
-      </h2>
-      <div id="sched" class="flex flex-wrap gap-2"></div>
-    </div>
-
     <!-- Footer -->
     <footer class="mt-5 text-center text-xs text-muted-foreground">
       30초마다 자동 갱신 · ← → 키로 탐색 · Powered by GitHub Pages
@@ -492,26 +484,6 @@
       body.innerHTML = g + rows + now;
       body.style.width = tw+'px';
       document.getElementById('tWrap').style.width = tw+'px';
-    }
-
-    // Schedule
-    {
-      const sc = D.schedule||[];
-      const el = document.getElementById('sched');
-      if (!sc.length) { el.innerHTML='<span class="text-sm text-muted-foreground">오늘 일정이 없습니다</span>'; }
-      else {
-        const nm = new Date().getHours()*60+new Date().getMinutes();
-        el.innerHTML = sc.map(s => {
-          const [h,m] = s.time.split(':').map(Number);
-          const min = h*60+m;
-          const past = nm>min+60, cur = nm>=min&&nm<min+60;
-          return `<div class="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 ${past?'opacity-35':''} ${cur?'border-blue-500/50 bg-blue-500/5':''}">
-            <span class="text-xs font-mono font-semibold ${cur?'text-blue-500':'text-muted-foreground'}">${s.time}</span>
-            <span class="text-sm">${s.label}</span>
-            ${cur?'<span class="relative flex h-2 w-2 ml-1"><span class="animate-ping absolute h-full w-full rounded-full bg-blue-400 opacity-75"></span><span class="relative rounded-full h-2 w-2 bg-blue-500"></span></span>':''}
-          </div>`;
-        }).join('');
-      }
     }
 
     // Scroll to NOW on first load
