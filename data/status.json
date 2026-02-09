@@ -21,7 +21,15 @@
       "due_date": "2026-02-14",
       "updated_at": "2026-02-09T13:00:00+09:00",
       "progress": 75,
-      "note": "FO/BO 이벤트 SDK 통합, OMS dual-publish, PHP 7.0 호환, Datadog 모니터 6개 설정 완료. Kotlin SDK 릴리스 리뷰 진행중"
+      "note": "FO/BO 이벤트 SDK 통합, OMS dual-publish, PHP 7.0 호환, Datadog 모니터 6개 설정 완료. Kotlin SDK 릴리스 리뷰 진행중",
+      "subtasks": [
+        { "title": "FO SDK 세션 버그 수정", "started_at": "2026-02-02T10:00:00+09:00", "due_date": "2026-02-03", "status": "done", "progress": 100 },
+        { "title": "FO/BO 이벤트 SDK 통합", "started_at": "2026-02-03T09:00:00+09:00", "due_date": "2026-02-05", "status": "done", "progress": 100 },
+        { "title": "OMS dual-publish 구현", "started_at": "2026-02-05T09:00:00+09:00", "due_date": "2026-02-07", "status": "done", "progress": 100 },
+        { "title": "PHP 7.0 호환 작업", "started_at": "2026-02-07T09:00:00+09:00", "due_date": "2026-02-08", "status": "done", "progress": 100 },
+        { "title": "Datadog 모니터 6개 설정", "started_at": "2026-02-08T09:00:00+09:00", "due_date": "2026-02-09", "status": "done", "progress": 100 },
+        { "title": "Kotlin SDK 릴리스 리뷰", "started_at": "2026-02-09T09:00:00+09:00", "due_date": "2026-02-14", "status": "in_progress", "progress": 30 }
+      ]
     },
     {
       "id": "task-002",
@@ -32,7 +40,16 @@
       "due_date": "2026-02-14",
       "updated_at": "2026-02-09T14:00:00+09:00",
       "progress": 80,
-      "note": "Broken Pipe 수정, SQL 컬럼 자동수정, 실시간 스트리밍 UX, 컨텍스트 150→유지. 데이터 요청 ~10건 처리"
+      "note": "Broken Pipe 수정, SQL 컬럼 자동수정, 실시간 스트리밍 UX, 컨텍스트 150→유지. 데이터 요청 ~10건 처리",
+      "subtasks": [
+        { "title": "Broken Pipe 오류 수정", "started_at": "2026-02-02T09:00:00+09:00", "due_date": "2026-02-03", "status": "done", "progress": 100 },
+        { "title": "SQL 컬럼 자동수정", "started_at": "2026-02-03T09:00:00+09:00", "due_date": "2026-02-05", "status": "done", "progress": 100 },
+        { "title": "AS alias 백틱 처리", "started_at": "2026-02-04T10:00:00+09:00", "due_date": "2026-02-05", "status": "done", "progress": 100 },
+        { "title": "실시간 스트리밍 UX", "started_at": "2026-02-05T09:00:00+09:00", "due_date": "2026-02-07", "status": "done", "progress": 100 },
+        { "title": "컨텍스트 윈도우 150→유지", "started_at": "2026-02-07T09:00:00+09:00", "due_date": "2026-02-08", "status": "done", "progress": 100 },
+        { "title": "order_time 버그 수정", "started_at": "2026-02-08T09:00:00+09:00", "due_date": "2026-02-09", "status": "done", "progress": 100 },
+        { "title": "대용량 CSV 스트리밍", "started_at": "2026-02-09T09:00:00+09:00", "due_date": "2026-02-14", "status": "in_progress", "progress": 40 }
+      ]
     },
     {
       "id": "task-003",
@@ -120,7 +137,14 @@
       "due_date": "2026-02-06",
       "updated_at": "2026-02-06T14:00:00+09:00",
       "progress": 100,
-      "note": "Agent Teams + Adaptive Thinking 섹션 추가, 글로벌 퍼미션 설정, CLI 내부 아키텍처 분석, TOP 10 기능 문서화"
+      "note": "Agent Teams + Adaptive Thinking 섹션 추가, 글로벌 퍼미션 설정, CLI 내부 아키텍처 분석, TOP 10 기능 문서화",
+      "subtasks": [
+        { "title": "Agent Teams 섹션 추가", "started_at": "2026-02-05T10:00:00+09:00", "due_date": "2026-02-05", "status": "done", "progress": 100 },
+        { "title": "Adaptive Thinking 섹션", "started_at": "2026-02-05T14:00:00+09:00", "due_date": "2026-02-05", "status": "done", "progress": 100 },
+        { "title": "글로벌 퍼미션 설정", "started_at": "2026-02-05T16:00:00+09:00", "due_date": "2026-02-06", "status": "done", "progress": 100 },
+        { "title": "CLI 내부 아키텍처 분석", "started_at": "2026-02-06T09:00:00+09:00", "due_date": "2026-02-06", "status": "done", "progress": 100 },
+        { "title": "TOP 10 기능 문서화", "started_at": "2026-02-06T10:00:00+09:00", "due_date": "2026-02-06", "status": "done", "progress": 100 }
+      ]
     },
     {
       "id": "task-011",

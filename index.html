@@ -70,6 +70,17 @@
 
     @keyframes now-pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
     .now-dot { animation: now-pulse 2s ease-in-out infinite; }
+
+    /* Drag handles */
+    .drag-handle { opacity: 0; transition: opacity 0.15s; }
+    .gantt-bar:hover .drag-handle { opacity: 1; }
+    body.dragging { user-select: none !important; }
+    body.dragging * { cursor: col-resize !important; }
+    body.dragging .gantt-bar { filter: none; opacity: 1; pointer-events: none; }
+
+    /* Expand arrow */
+    .expand-arrow { transition: transform 0.15s ease; }
+    .expand-arrow.open { transform: rotate(90deg); }
   </style>
 </head>
 <body class="min-h-screen bg-background text-foreground antialiased">
@@ -150,6 +161,9 @@
   <!-- Tooltip -->
   <div id="tip" class="hidden fixed z-50 max-w-xs rounded-lg border border-border bg-card shadow-lg p-3 text-sm pointer-events-none"></div>
 
+  <!-- Drag Tooltip -->
+  <div id="dragTip" class="hidden fixed z-[60] rounded-md border border-blue-500/50 bg-card shadow-lg px-2.5 py-1 text-xs font-mono font-semibold text-blue-500 pointer-events-none"></div>
+
   <script>
   /* ── Config ──────────────────────────────────────────────── */
   const ZOOMS = [
@@ -179,9 +193,14 @@
   };
 
   const RH = 48;
+  const SRH = 36;
 
   /* ── State ───────────────────────────────────────────────── */
   let Z = ZOOMS[2], VS = null, D = null, firstScroll = true;
+  let expanded = new Set();
+  let VR = [];
+  let TW = 0, DUR = 0;
+  let drag = null;
 
   /* ── Date Utils ──────────────────────────────────────────── */
   const sod = d => { const r=new Date(d); r.setHours(0,0,0,0); return r; };
@@ -199,6 +218,7 @@
 
   function fmtD(d) { return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
   function fmtShort(d) { return `${d.getMonth()+1}/${d.getDate()}`; }
+  function fmtDateOnly(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
   function fmtRange(s,e) {
     const end = addD(e,-1);
@@ -213,6 +233,13 @@
     if (d<3600) return `${Math.floor(d/60)}분 전`;
     if (d<86400) return `${Math.floor(d/3600)}시간 전`;
     return `${Math.floor(d/86400)}일 전`;
+  }
+
+  function toISOKST(d) {
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'),
+      dy=String(d.getDate()).padStart(2,'0'), h=String(d.getHours()).padStart(2,'0'),
+      mi=String(d.getMinutes()).padStart(2,'0'), s=String(d.getSeconds()).padStart(2,'0');
+    return `${y}-${m}-${dy}T${h}:${mi}:${s}+09:00`;
   }
 
   /* ── Theme ───────────────────────────────────────────────── */
@@ -282,6 +309,27 @@
     return {s,e};
   }
 
+  /* ── Visible Rows (expand/collapse) ────────────────────────── */
+  function getVisibleRows() {
+    const rows = [];
+    (D?.tasks || []).forEach((t, i) => {
+      const hasSubs = !!(t.subtasks && t.subtasks.length);
+      rows.push({ type:'task', task:t, idx:i, hasSubs });
+      if (hasSubs && expanded.has(i)) {
+        t.subtasks.forEach((st, si) => {
+          rows.push({ type:'sub', task:st, parentIdx:i, subIdx:si, category:t.category });
+        });
+      }
+    });
+    return rows;
+  }
+
+  function toggleExpand(idx) {
+    if (expanded.has(idx)) expanded.delete(idx);
+    else expanded.add(idx);
+    render();
+  }
+
   /* ── Render ──────────────────────────────────────────────── */
   function render() {
     // Zoom bar
@@ -294,10 +342,12 @@
 
     if (!D) return;
     const cols = getCols();
-    const tasks = D.tasks||[];
     const tw = cols.reduce((s,c)=>s+c.w,0);
     const ve = addD(VS,Z.days);
     const dur = ve.getTime()-VS.getTime();
+    TW = tw; DUR = dur;
+
+    VR = getVisibleRows();
 
     // Date header
     {
@@ -315,22 +365,43 @@
 
     // Labels
     {
-      if (tasks.length===0) {
+      if (VR.length===0) {
         document.getElementById('labels').innerHTML = `<div class="flex items-center justify-center text-sm text-muted-foreground" style="height:${RH*2}px">작업 없음</div>`;
       } else {
-        document.getElementById('labels').innerHTML = tasks.map(t => {
-          const cat = CAT[t.category]||{e:'📌',l:t.category};
-          const st = STAT[t.status]||{l:t.status,dot:'bg-gray-400'};
-          return `<div class="flex items-center gap-2 px-3 border-b border-border/50" style="height:${RH}px">
-            <span class="text-sm shrink-0">${cat.e}</span>
-            <div class="min-w-0 flex-1">
-              <div class="text-[13px] font-medium truncate leading-tight">${t.title}</div>
-              <div class="flex items-center gap-1 mt-0.5">
-                <span class="h-1.5 w-1.5 rounded-full ${st.dot} shrink-0"></span>
-                <span class="text-[10px] text-muted-foreground">${st.l}${t.progress>0&&t.progress<100?' · '+t.progress+'%':''}</span>
+        document.getElementById('labels').innerHTML = VR.map((row, vi) => {
+          if (row.type==='task') {
+            const t = row.task;
+            const cat = CAT[t.category]||{e:'📌',l:t.category};
+            const st = STAT[t.status]||{l:t.status,dot:'bg-gray-400'};
+            const hasSubs = row.hasSubs;
+            const isExp = expanded.has(row.idx);
+            const subCount = hasSubs ? t.subtasks.length : 0;
+            return `<div class="flex items-center gap-1.5 px-3 border-b border-border/50 ${hasSubs?'cursor-pointer hover:bg-accent/30':''}" ${hasSubs?`onclick="toggleExpand(${row.idx})"`:''}  style="height:${RH}px">
+              ${hasSubs
+                ? `<span class="expand-arrow text-[10px] text-muted-foreground w-3 shrink-0 select-none text-center ${isExp?'open':''}">▶</span>`
+                : '<span class="w-3 shrink-0"></span>'}
+              <span class="text-sm shrink-0">${cat.e}</span>
+              <div class="min-w-0 flex-1">
+                <div class="text-[13px] font-medium truncate leading-tight">${t.title}</div>
+                <div class="flex items-center gap-1 mt-0.5">
+                  <span class="h-1.5 w-1.5 rounded-full ${st.dot} shrink-0"></span>
+                  <span class="text-[10px] text-muted-foreground">${st.l}${t.progress>0&&t.progress<100?' · '+t.progress+'%':''}${hasSubs?' · '+subCount+'개':''}</span>
+                </div>
               </div>
-            </div>
-          </div>`;
+            </div>`;
+          } else {
+            const st = row.task;
+            const stat = STAT[st.status]||{l:st.status,dot:'bg-gray-400'};
+            return `<div class="flex items-center gap-1.5 pl-9 pr-3 border-b border-border/20" style="height:${SRH}px">
+              <div class="min-w-0 flex-1">
+                <div class="text-[12px] truncate leading-tight text-muted-foreground">${st.title}</div>
+                <div class="flex items-center gap-1">
+                  <span class="h-1 w-1 rounded-full ${stat.dot} shrink-0"></span>
+                  <span class="text-[9px] text-muted-foreground">${stat.l}${st.progress>0&&st.progress<100?' · '+st.progress+'%':''}</span>
+                </div>
+              </div>
+            </div>`;
+          }
         }).join('');
       }
     }
@@ -349,57 +420,67 @@
 
       // Rows
       let rows = '';
-      tasks.forEach((t,i) => {
+      VR.forEach((row, vi) => {
+        const rh = row.type==='task' ? RH : SRH;
+        const t = row.task;
+        const catKey = row.type==='task' ? t.category : row.category;
+        const cat = CAT[catKey]||{c:'148 163 184'};
         const {s,e} = taskRange(t);
         const l = Math.max(0, (s.getTime()-VS.getTime())/dur);
         const r = Math.min(1, (e.getTime()-VS.getTime())/dur);
+        const isSub = row.type==='sub';
         let bar = '';
         if (r>0 && l<1) {
           const lp = l*tw, wp = Math.max(6,(r-l)*tw);
-          const cat = CAT[t.category]||{c:'148 163 184'};
           const rgb = cat.c;
           const oe = !t.due_date && (t.status==='in_progress'||t.status==='blocked');
+          const opMul = isSub ? 0.7 : 1;
 
           let bgStyle='', borderStyle='', fillStyle='', extra='';
           if (t.status==='in_progress') {
-            bgStyle = `background:rgba(${rgb},0.12)`;
-            borderStyle = `border:1px solid rgba(${rgb},0.35)`;
-            fillStyle = `background:rgba(${rgb},0.4)`;
+            bgStyle = `background:rgba(${rgb},${0.12*opMul})`;
+            borderStyle = `border:1px solid rgba(${rgb},${0.35*opMul})`;
+            fillStyle = `background:rgba(${rgb},${0.4*opMul})`;
           } else if (t.status==='blocked') {
-            bgStyle = `background:rgba(239,68,68,0.06)`;
-            borderStyle = `border:1px solid rgba(239,68,68,0.35)`;
-            fillStyle = `background:rgba(239,68,68,0.3)`;
+            bgStyle = `background:rgba(239,68,68,${0.06*opMul})`;
+            borderStyle = `border:1px solid rgba(239,68,68,${0.35*opMul})`;
+            fillStyle = `background:rgba(239,68,68,${0.3*opMul})`;
             extra = 'bar-stripe';
           } else if (t.status==='done') {
-            bgStyle = `background:rgba(${rgb},0.08)`;
-            borderStyle = `border:1px solid rgba(${rgb},0.2)`;
-            fillStyle = `background:rgba(${rgb},0.25)`;
-          } else { // waiting
-            bgStyle = `background:rgba(${rgb},0.06)`;
-            borderStyle = `border:1px dashed rgba(${rgb},0.3)`;
-            fillStyle = `background:rgba(${rgb},0.15)`;
+            bgStyle = `background:rgba(${rgb},${0.08*opMul})`;
+            borderStyle = `border:1px solid rgba(${rgb},${0.2*opMul})`;
+            fillStyle = `background:rgba(${rgb},${0.25*opMul})`;
+          } else {
+            bgStyle = `background:rgba(${rgb},${0.06*opMul})`;
+            borderStyle = `border:1px dashed rgba(${rgb},${0.3*opMul})`;
+            fillStyle = `background:rgba(${rgb},${0.15*opMul})`;
             extra = 'bar-dash';
           }
 
           const rCls = oe ? 'rounded-l-[4px] rounded-r-none border-r-0' : 'rounded-[4px]';
+          const topBot = isSub ? 'top-1 bottom-1' : 'top-1.5 bottom-1.5';
           const txtFit = wp > 80;
           const pct = t.progress||0;
+          const fontSize = isSub ? 'text-[10px]' : 'text-[11px]';
 
-          bar = `<div class="gantt-bar absolute top-1.5 bottom-1.5 ${rCls} ${extra} cursor-pointer overflow-hidden"
+          bar = `<div class="gantt-bar absolute ${topBot} ${rCls} ${extra} cursor-pointer overflow-hidden"
             style="left:${lp}px;width:${wp}px;${bgStyle};${borderStyle}"
-            data-i="${i}" onmouseenter="showTip(event,${i})" onmouseleave="hideTip()">
+            data-vi="${vi}" onmouseenter="showTip(event,${vi})" onmouseleave="hideTip()">
             <div class="h-full ${oe?'rounded-l-[3px]':'rounded-[3px]'} transition-all" style="width:${pct}%;${fillStyle}"></div>
-            ${txtFit?`<span class="absolute inset-0 flex items-center px-2 text-[11px] font-medium truncate" style="color:rgba(${rgb},0.9)">${t.title}</span>`:''}
+            ${txtFit?`<span class="absolute inset-0 flex items-center px-2 ${fontSize} font-medium truncate" style="color:rgba(${rgb},${0.9*opMul})">${t.title}</span>`:''}
+            <div class="drag-handle absolute top-0 bottom-0 left-0 w-[5px] cursor-col-resize z-10 rounded-l-[3px]" style="background:rgba(${rgb},0.4)" data-edge="left" data-vi="${vi}"></div>
+            <div class="drag-handle absolute top-0 bottom-0 right-0 w-[5px] cursor-col-resize z-10 rounded-r-[3px]" style="background:rgba(${rgb},0.4)" data-edge="right" data-vi="${vi}"></div>
           </div>`;
 
           if (oe) {
-            bar += `<div class="absolute top-1.5 bottom-1.5 pointer-events-none" style="left:${lp+wp}px;width:12px;border-top:1px dashed rgba(${rgb},0.3);border-bottom:1px dashed rgba(${rgb},0.3);"></div>`;
+            bar += `<div class="absolute ${topBot} pointer-events-none" style="left:${lp+wp}px;width:12px;border-top:1px dashed rgba(${rgb},0.3);border-bottom:1px dashed rgba(${rgb},0.3);"></div>`;
           }
         }
-        rows += `<div class="relative border-b border-border/30 ${i%2?'bg-muted/[0.03]':''}" style="height:${RH}px">${bar}</div>`;
+        const rowBorder = isSub ? 'border-border/20' : 'border-border/30';
+        rows += `<div class="relative border-b ${rowBorder} ${vi%2?'bg-muted/[0.03]':''}" style="height:${rh}px">${bar}</div>`;
       });
 
-      if (tasks.length===0) {
+      if (VR.length===0) {
         rows = `<div class="flex items-center justify-center text-sm text-muted-foreground" style="height:${RH*2}px;width:${tw}px">타임라인에 표시할 작업이 없습니다</div>`;
       }
 
@@ -458,18 +539,23 @@
   }
 
   /* ── Tooltip ─────────────────────────────────────────────── */
-  function showTip(ev,i) {
-    const t = D.tasks[i];
-    const cat = CAT[t.category]||{e:'📌',l:t.category};
+  function showTip(ev,vi) {
+    if (drag) return;
+    const row = VR[vi];
+    if (!row) return;
+    const t = row.task;
+    const catKey = row.type==='task' ? t.category : row.category;
+    const cat = CAT[catKey]||{e:'📌',l:catKey};
     const st = STAT[t.status]||{l:t.status};
     const {s,e} = taskRange(t);
     const tip = document.getElementById('tip');
-    tip.innerHTML = `<div class="font-semibold mb-1">${cat.e} ${t.title}</div>
+    const prefix = row.type==='sub' ? '<span class="text-[10px] text-muted-foreground">하위작업</span><br>' : '';
+    tip.innerHTML = `${prefix}<div class="font-semibold mb-1">${cat.e} ${t.title}</div>
       <div class="space-y-0.5 text-xs text-muted-foreground">
         <div><span class="inline-block h-1.5 w-1.5 rounded-full ${st.dot||'bg-gray-400'} mr-1"></span>${st.l} · ${t.progress||0}%</div>
         <div>📅 ${fmtShort(s)} → ${t.due_date?fmtShort(e):'미정'}</div>
         ${t.note?`<div class="mt-1 text-card-foreground/80">${t.note}</div>`:''}
-        <div class="mt-1 opacity-60">${relT(t.updated_at)} 업데이트</div>
+        ${t.updated_at?`<div class="mt-1 opacity-60">${relT(t.updated_at)} 업데이트</div>`:''}
       </div>`;
     tip.classList.remove('hidden');
     const r = tip.getBoundingClientRect();
@@ -479,6 +565,99 @@
     tip.style.left=x+'px'; tip.style.top=y+'px';
   }
   function hideTip() { document.getElementById('tip').classList.add('hidden'); }
+
+  /* ── Drag Resize ───────────────────────────────────────────── */
+  function pxToDate(px) {
+    const ratio = Math.max(0, Math.min(1, px / TW));
+    return new Date(VS.getTime() + ratio * DUR);
+  }
+
+  function onDragStart(e) {
+    const handle = e.target.closest('.drag-handle');
+    if (!handle) return;
+    e.preventDefault();
+    e.stopPropagation();
+    hideTip();
+
+    const vi = parseInt(handle.dataset.vi);
+    const barEl = handle.closest('.gantt-bar');
+
+    drag = {
+      vi,
+      edge: handle.dataset.edge,
+      startX: e.clientX,
+      origLeft: parseFloat(barEl.style.left),
+      origWidth: parseFloat(barEl.style.width),
+      barEl,
+    };
+
+    document.body.classList.add('dragging');
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', onDragEnd);
+  }
+
+  function onDragMove(e) {
+    if (!drag) return;
+    e.preventDefault();
+
+    const dx = e.clientX - drag.startX;
+
+    if (drag.edge === 'right') {
+      const nw = Math.max(6, drag.origWidth + dx);
+      drag.barEl.style.width = nw + 'px';
+    } else {
+      const nl = drag.origLeft + dx;
+      const nw = Math.max(6, drag.origWidth - dx);
+      drag.barEl.style.left = nl + 'px';
+      drag.barEl.style.width = nw + 'px';
+    }
+
+    // Drag tooltip
+    const dtip = document.getElementById('dragTip');
+    const barLeft = parseFloat(drag.barEl.style.left);
+    const barWidth = parseFloat(drag.barEl.style.width);
+    const dateVal = drag.edge === 'left' ? pxToDate(barLeft) : pxToDate(barLeft + barWidth);
+    dtip.textContent = fmtD(dateVal);
+    dtip.classList.remove('hidden');
+    dtip.style.left = (e.clientX + 14) + 'px';
+    dtip.style.top = (e.clientY - 32) + 'px';
+  }
+
+  function onDragEnd(e) {
+    if (!drag) return;
+
+    document.body.classList.remove('dragging');
+    document.removeEventListener('mousemove', onDragMove);
+    document.removeEventListener('mouseup', onDragEnd);
+    document.getElementById('dragTip').classList.add('hidden');
+
+    // Calculate new dates
+    const barLeft = parseFloat(drag.barEl.style.left);
+    const barWidth = parseFloat(drag.barEl.style.width);
+    const row = VR[drag.vi];
+
+    let t;
+    if (row.type === 'task') {
+      t = D.tasks[row.idx];
+    } else {
+      t = D.tasks[row.parentIdx].subtasks[row.subIdx];
+    }
+
+    if (drag.edge === 'left') {
+      const newStart = pxToDate(barLeft);
+      t.started_at = toISOKST(newStart);
+    } else {
+      const newEnd = pxToDate(barLeft + barWidth);
+      t.due_date = fmtDateOnly(newEnd);
+    }
+
+    drag = null;
+    render();
+  }
+
+  document.addEventListener('mousedown', e => {
+    if (e.target.closest('.drag-handle')) onDragStart(e);
+  });
 
   /* ── Status indicator ────────────────────────────────────── */
   function setOnline(t) {
