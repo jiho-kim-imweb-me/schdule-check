@@ -438,9 +438,9 @@
 
           let bgStyle='', borderStyle='', fillStyle='', extra='';
           if (t.status==='in_progress') {
-            bgStyle = `background:rgba(${rgb},${0.28*opMul})`;
-            borderStyle = `border:2px solid rgba(${rgb},${0.75*opMul})`;
-            fillStyle = `background:rgba(${rgb},${0.7*opMul})`;
+            bgStyle = `background:rgba(${rgb},${0.55*opMul})`;
+            borderStyle = `border:2px solid rgba(${rgb},${0.9*opMul})`;
+            fillStyle = `background:rgba(${rgb},${0.9*opMul})`;
           } else if (t.status==='blocked') {
             bgStyle = `background:rgba(239,68,68,${0.06*opMul})`;
             borderStyle = `border:1px solid rgba(239,68,68,${0.35*opMul})`;
@@ -467,7 +467,7 @@
             style="left:${lp}px;width:${wp}px;${bgStyle};${borderStyle}"
             data-vi="${vi}" onmouseenter="showTip(event,${vi})" onmouseleave="hideTip()">
             <div class="h-full ${oe?'rounded-l-[3px]':'rounded-[3px]'} transition-all" style="width:${pct}%;${fillStyle}"></div>
-            ${txtFit?`<span class="absolute inset-0 flex items-center px-2 ${fontSize} font-medium truncate" style="color:rgba(${rgb},${0.9*opMul})">${t.title}</span>`:''}
+            ${txtFit?`<span class="absolute inset-0 flex items-center px-2 ${fontSize} font-medium truncate" style="color:${t.status==='in_progress'?'rgba(255,255,255,0.95)':'rgba('+rgb+','+(0.9*opMul)+')'}">${t.title}</span>`:''}
             <div class="drag-handle absolute top-0 bottom-0 left-0 w-[5px] cursor-col-resize z-10 rounded-l-[3px]" style="background:rgba(${rgb},0.4)" data-edge="left" data-vi="${vi}"></div>
             <div class="drag-handle absolute top-0 bottom-0 right-0 w-[5px] cursor-col-resize z-10 rounded-r-[3px]" style="background:rgba(${rgb},0.4)" data-edge="right" data-vi="${vi}"></div>
           </div>`;
