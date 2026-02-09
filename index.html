@@ -436,40 +436,33 @@
           const oe = !t.due_date && (t.status==='in_progress'||t.status==='blocked');
           const opMul = isSub ? 0.7 : 1;
 
-          let bgStyle='', borderStyle='', fillStyle='', extra='';
+          let barStyle='', extra='', txtColor='';
           if (t.status==='in_progress') {
-            bgStyle = `background:rgba(${rgb},${0.55*opMul})`;
-            borderStyle = `border:2px solid rgba(${rgb},${0.9*opMul})`;
-            fillStyle = `background:rgba(${rgb},${0.9*opMul})`;
+            barStyle = `background:linear-gradient(180deg,rgba(${rgb},${0.95*opMul}),rgba(${rgb},${0.78*opMul}));box-shadow:0 2px 6px rgba(0,0,0,0.15)`;
+            txtColor = 'rgba(255,255,255,0.95)';
           } else if (t.status==='blocked') {
-            bgStyle = `background:rgba(239,68,68,${0.06*opMul})`;
-            borderStyle = `border:1px solid rgba(239,68,68,${0.35*opMul})`;
-            fillStyle = `background:rgba(239,68,68,${0.3*opMul})`;
-            extra = 'bar-stripe';
+            barStyle = `background:linear-gradient(180deg,rgba(239,68,68,${0.9*opMul}),rgba(239,68,68,${0.72*opMul}));box-shadow:0 2px 6px rgba(0,0,0,0.15)`;
+            txtColor = 'rgba(255,255,255,0.95)';
           } else if (t.status==='done') {
-            bgStyle = `background:rgba(${rgb},${0.08*opMul})`;
-            borderStyle = `border:1px solid rgba(${rgb},${0.2*opMul})`;
-            fillStyle = `background:rgba(${rgb},${0.25*opMul})`;
+            barStyle = `background:linear-gradient(180deg,rgba(${rgb},${0.7*opMul}),rgba(${rgb},${0.5*opMul}));box-shadow:0 1px 3px rgba(0,0,0,0.1)`;
+            txtColor = 'rgba(255,255,255,0.9)';
           } else {
-            bgStyle = `background:rgba(${rgb},${0.06*opMul})`;
-            borderStyle = `border:1px dashed rgba(${rgb},${0.3*opMul})`;
-            fillStyle = `background:rgba(${rgb},${0.15*opMul})`;
+            barStyle = `background:rgba(${rgb},${0.15*opMul});border:1.5px dashed rgba(${rgb},${0.45*opMul})`;
             extra = 'bar-dash';
+            txtColor = `rgba(${rgb},${0.85*opMul})`;
           }
 
-          const rCls = oe ? 'rounded-l-[4px] rounded-r-none border-r-0' : 'rounded-[4px]';
+          const rCls = oe ? 'rounded-l-[6px] rounded-r-none' : 'rounded-[6px]';
           const topBot = isSub ? 'top-1 bottom-1' : 'top-1.5 bottom-1.5';
           const txtFit = wp > 80;
-          const pct = t.progress||0;
           const fontSize = isSub ? 'text-[10px]' : 'text-[11px]';
 
           bar = `<div class="gantt-bar absolute ${topBot} ${rCls} ${extra} cursor-pointer overflow-hidden"
-            style="left:${lp}px;width:${wp}px;${bgStyle};${borderStyle}"
+            style="left:${lp}px;width:${wp}px;${barStyle}"
             data-vi="${vi}" onmouseenter="showTip(event,${vi})" onmouseleave="hideTip()">
-            <div class="h-full ${oe?'rounded-l-[3px]':'rounded-[3px]'} transition-all" style="width:${pct}%;${fillStyle}"></div>
-            ${txtFit?`<span class="absolute inset-0 flex items-center px-2 ${fontSize} font-medium truncate" style="color:${t.status==='in_progress'?'rgba(255,255,255,0.95)':'rgba('+rgb+','+(0.9*opMul)+')'}">${t.title}</span>`:''}
-            <div class="drag-handle absolute top-0 bottom-0 left-0 w-[5px] cursor-col-resize z-10 rounded-l-[3px]" style="background:rgba(${rgb},0.4)" data-edge="left" data-vi="${vi}"></div>
-            <div class="drag-handle absolute top-0 bottom-0 right-0 w-[5px] cursor-col-resize z-10 rounded-r-[3px]" style="background:rgba(${rgb},0.4)" data-edge="right" data-vi="${vi}"></div>
+            ${txtFit?`<span class="absolute inset-0 flex items-center px-2 ${fontSize} font-semibold truncate" style="color:${txtColor};text-shadow:0 1px 2px rgba(0,0,0,0.15)">${t.title}</span>`:''}
+            <div class="drag-handle absolute top-0 bottom-0 left-0 w-[5px] cursor-col-resize z-10 rounded-l-[5px]" style="background:rgba(255,255,255,0.3)" data-edge="left" data-vi="${vi}"></div>
+            <div class="drag-handle absolute top-0 bottom-0 right-0 w-[5px] cursor-col-resize z-10 rounded-r-[5px]" style="background:rgba(255,255,255,0.3)" data-edge="right" data-vi="${vi}"></div>
           </div>`;
 
           if (oe) {
