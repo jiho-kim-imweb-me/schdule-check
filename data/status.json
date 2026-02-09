@@ -17,7 +17,8 @@
       "title": "RDS 슬로우쿼리 분석",
       "status": "in_progress",
       "category": "analysis",
-      "started_at": "2026-02-09T10:30:00+09:00",
+      "started_at": "2026-02-07T10:00:00+09:00",
+      "due_date": "2026-02-12",
       "updated_at": "2026-02-09T15:30:00+09:00",
       "progress": 65,
       "note": "최근 24시간 TOP 20 쿼리 분석중"
@@ -27,7 +28,8 @@
       "title": "EKS 노드그룹 스케일링",
       "status": "blocked",
       "category": "infra",
-      "started_at": "2026-02-09T09:00:00+09:00",
+      "started_at": "2026-02-05T09:00:00+09:00",
+      "due_date": "2026-02-14",
       "updated_at": "2026-02-09T11:00:00+09:00",
       "progress": 20,
       "note": "비용 승인 대기중"
@@ -37,7 +39,8 @@
       "title": "Grafana 알림 튜닝",
       "status": "done",
       "category": "monitoring",
-      "started_at": "2026-02-09T09:30:00+09:00",
+      "started_at": "2026-02-08T09:30:00+09:00",
+      "due_date": "2026-02-09",
       "updated_at": "2026-02-09T11:30:00+09:00",
       "progress": 100,
       "note": "노이즈 알림 50% 감소 완료"
@@ -47,7 +50,8 @@
       "title": "CloudWatch 비용 리포트 생성",
       "status": "waiting",
       "category": "cost",
-      "started_at": null,
+      "started_at": "2026-02-10T09:00:00+09:00",
+      "due_date": "2026-02-13",
       "updated_at": "2026-02-09T08:00:00+09:00",
       "progress": 0,
       "note": "월별 비용 트렌드 리포트 예정"
@@ -57,7 +61,8 @@
       "title": "배포 서버 SSH 키 로테이션",
       "status": "in_progress",
       "category": "security",
-      "started_at": "2026-02-09T13:00:00+09:00",
+      "started_at": "2026-02-09T09:00:00+09:00",
+      "due_date": "2026-02-11",
       "updated_at": "2026-02-09T14:30:00+09:00",
       "progress": 40,
       "note": "프로덕션 서버 3대 중 1대 완료"

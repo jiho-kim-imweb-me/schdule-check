@@ -48,332 +48,482 @@
       --border: 240 3.7% 15.9%;
       --accent: 240 3.7% 15.9%;
     }
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background-color: hsl(var(--background));
-      color: hsl(var(--foreground));
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    .ts::-webkit-scrollbar { height: 6px; }
+    .ts::-webkit-scrollbar-track { background: hsl(var(--muted)); border-radius: 3px; }
+    .ts::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px; }
+    .ts::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
+    .gantt-bar { transition: filter 0.15s, opacity 0.15s; }
+    .gantt-bar:hover { filter: brightness(1.15); opacity: 0.9; }
+
+    .bar-stripe {
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(239,68,68,0.08) 3px, rgba(239,68,68,0.08) 6px);
     }
-    .schedule-line {
-      position: relative;
+    .dark .bar-stripe {
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(239,68,68,0.15) 3px, rgba(239,68,68,0.15) 6px);
     }
-    .schedule-line::before {
-      content: '';
-      position: absolute;
-      left: 5px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: hsl(var(--border));
+    .bar-dash {
+      background-image: repeating-linear-gradient(90deg, hsl(var(--muted-foreground) / 0.15), hsl(var(--muted-foreground) / 0.15) 6px, transparent 6px, transparent 10px);
     }
-    .now-line {
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: #ef4444;
-      z-index: 10;
-    }
-    .now-line::before {
-      content: 'NOW';
-      position: absolute;
-      right: 0;
-      top: -10px;
-      font-size: 10px;
-      font-weight: 700;
-      color: #ef4444;
-      letter-spacing: 0.05em;
-    }
-    .now-line::after {
-      content: '';
-      position: absolute;
-      left: -3px;
-      top: -3px;
-      width: 8px;
-      height: 8px;
-      background: #ef4444;
-      border-radius: 50%;
-    }
+
+    @keyframes now-pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+    .now-dot { animation: now-pulse 2s ease-in-out infinite; }
   </style>
 </head>
 <body class="min-h-screen bg-background text-foreground antialiased">
-  <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
 
     <!-- Header -->
-    <header class="mb-8">
+    <header class="mb-5">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Jiho's Dashboard</h1>
-          <p class="mt-1 text-sm text-muted-foreground">오늘 하루 작업 현황을 실시간으로 확인하세요</p>
+          <h1 class="text-2xl font-bold tracking-tight">Jiho's Dashboard</h1>
+          <p class="mt-0.5 text-sm text-muted-foreground">작업 현황을 타임라인으로 확인하세요</p>
         </div>
         <div class="flex items-center gap-3">
-          <div id="status-indicator" class="flex items-center gap-2 text-xs text-muted-foreground">
-            <span class="relative flex h-3 w-3">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          <div id="live" class="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative rounded-full h-2.5 w-2.5 bg-green-500"></span>
             </span>
-            <span id="status-text">Live</span>
-            <span class="text-muted-foreground/60" id="status-time"></span>
+            <span>Live</span>
           </div>
-          <button id="theme-toggle" class="rounded-md border border-border p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" aria-label="테마 전환">
-            <svg id="icon-moon" class="h-4 w-4 hidden" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 006.002-2.082 9.718 9.718 0 003-3.916z"/></svg>
-            <svg id="icon-sun" class="h-4 w-4 hidden" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+          <button id="themeBtn" class="rounded-md border border-border p-2 text-muted-foreground hover:bg-accent transition-colors">
+            <svg id="moonIco" class="h-4 w-4 hidden" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 006.002-2.082 9.718 9.718 0 003-3.916z"/></svg>
+            <svg id="sunIco" class="h-4 w-4 hidden" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
           </button>
         </div>
       </div>
     </header>
 
-    <!-- Content -->
-    <main class="space-y-6" id="dashboard-content">
-      <div class="flex items-center justify-center py-20 text-muted-foreground">
-        <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-        데이터를 불러오는 중...
+    <!-- Controls -->
+    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <div class="flex items-center gap-1.5">
+        <button onclick="nav(-1)" class="rounded-md border border-border p-1.5 hover:bg-accent transition-colors">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+        </button>
+        <button onclick="goToday()" class="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent transition-colors">오늘</button>
+        <button onclick="nav(1)" class="rounded-md border border-border p-1.5 hover:bg-accent transition-colors">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+        </button>
+        <span id="rangeLabel" class="ml-2 text-sm font-semibold"></span>
       </div>
-    </main>
+      <div class="flex rounded-lg border border-border overflow-hidden" id="zoomBar"></div>
+    </div>
+
+    <!-- Gantt Chart -->
+    <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
+      <div class="flex">
+        <!-- Left: Labels -->
+        <div class="w-48 sm:w-56 shrink-0 border-r border-border bg-card z-10" id="labelPanel">
+          <div class="h-10 border-b border-border px-3 flex items-center">
+            <span class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">작업</span>
+          </div>
+          <div id="labels"></div>
+        </div>
+        <!-- Right: Timeline -->
+        <div class="flex-1 overflow-x-auto ts" id="tScroll">
+          <div id="tWrap" class="relative">
+            <div class="h-10 border-b border-border flex" id="tHeader"></div>
+            <div class="relative" id="tBody"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule -->
+    <div class="mt-3 rounded-lg border border-border bg-card shadow-sm p-4">
+      <h2 class="text-sm font-semibold mb-2.5 flex items-center gap-1.5">
+        <span>📅</span> 오늘 일정
+      </h2>
+      <div id="sched" class="flex flex-wrap gap-2"></div>
+    </div>
 
     <!-- Footer -->
-    <footer class="mt-10 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-      30초마다 자동 갱신 · Powered by GitHub Pages
+    <footer class="mt-5 text-center text-xs text-muted-foreground">
+      30초마다 자동 갱신 · ← → 키로 탐색 · Powered by GitHub Pages
     </footer>
   </div>
 
+  <!-- Tooltip -->
+  <div id="tip" class="hidden fixed z-50 max-w-xs rounded-lg border border-border bg-card shadow-lg p-3 text-sm pointer-events-none"></div>
+
   <script>
-    // --- Constants ---
-    const CATEGORY = {
-      analysis:   { emoji: '📊', label: '분석',     color: 'blue' },
-      infra:      { emoji: '⚙️', label: '인프라',   color: 'purple' },
-      incident:   { emoji: '🔴', label: '장애',     color: 'red' },
-      cost:       { emoji: '💰', label: '비용',     color: 'amber' },
-      security:   { emoji: '🔒', label: '보안',     color: 'rose' },
-      automation: { emoji: '🤖', label: '자동화',   color: 'cyan' },
-      monitoring: { emoji: '📡', label: '모니터링', color: 'orange' },
-      docs:       { emoji: '📝', label: '문서화',   color: 'slate' },
-    };
+  /* ── Config ──────────────────────────────────────────────── */
+  const ZOOMS = [
+    { id:'1d', label:'1일', days:1,  step:1,  unit:'hour', cpx:50  },
+    { id:'3d', label:'3일', days:3,  step:1,  unit:'hour', cpx:24  },
+    { id:'1w', label:'1주', days:7,  step:7,  unit:'day',  cpx:120 },
+    { id:'2w', label:'2주', days:14, step:7,  unit:'day',  cpx:72  },
+    { id:'1m', label:'1달', days:30, step:30, unit:'day',  cpx:38  },
+  ];
 
-    const BADGE_CLASSES = {
-      blue:   'bg-blue-500/10 text-blue-500 dark:bg-blue-400/10 dark:text-blue-400',
-      purple: 'bg-purple-500/10 text-purple-500 dark:bg-purple-400/10 dark:text-purple-400',
-      red:    'bg-red-500/10 text-red-500 dark:bg-red-400/10 dark:text-red-400',
-      amber:  'bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400',
-      rose:   'bg-rose-500/10 text-rose-500 dark:bg-rose-400/10 dark:text-rose-400',
-      cyan:   'bg-cyan-500/10 text-cyan-600 dark:bg-cyan-400/10 dark:text-cyan-400',
-      orange: 'bg-orange-500/10 text-orange-500 dark:bg-orange-400/10 dark:text-orange-400',
-      slate:  'bg-slate-500/10 text-slate-500 dark:bg-slate-400/10 dark:text-slate-400',
-    };
+  const CAT = {
+    analysis:  {e:'📊',l:'분석',  c:'59 130 246'},
+    infra:     {e:'⚙️',l:'인프라',c:'168 85 247'},
+    incident:  {e:'🔴',l:'장애',  c:'239 68 68'},
+    cost:      {e:'💰',l:'비용',  c:'245 158 11'},
+    security:  {e:'🔒',l:'보안',  c:'244 63 94'},
+    automation:{e:'🤖',l:'자동화',c:'6 182 212'},
+    monitoring:{e:'📡',l:'모니터링',c:'249 115 22'},
+    docs:      {e:'📝',l:'문서화',c:'148 163 184'},
+  };
 
-    // --- Utility ---
-    function relativeTime(isoString) {
-      if (!isoString) return '';
-      const now = new Date();
-      const target = new Date(isoString);
-      const diffMs = now - target;
-      const diffSec = Math.floor(diffMs / 1000);
-      if (diffSec < 60) return '방금 전';
-      const diffMin = Math.floor(diffSec / 60);
-      if (diffMin < 60) return `${diffMin}분 전`;
-      const diffHr = Math.floor(diffMin / 60);
-      if (diffHr < 24) return `${diffHr}시간 전`;
-      const diffDay = Math.floor(diffHr / 24);
-      return `${diffDay}일 전`;
-    }
+  const STAT = {
+    in_progress:{l:'진행중',dot:'bg-green-500'},
+    waiting:    {l:'대기',  dot:'bg-yellow-500'},
+    blocked:    {l:'차단',  dot:'bg-red-500'},
+    done:       {l:'완료',  dot:'bg-gray-400'},
+  };
 
-    function timeToMinutes(t) {
-      const [h, m] = t.split(':').map(Number);
-      return h * 60 + m;
-    }
+  const RH = 48;
 
-    function nowMinutes() {
-      const n = new Date();
-      return n.getHours() * 60 + n.getMinutes();
-    }
+  /* ── State ───────────────────────────────────────────────── */
+  let Z = ZOOMS[2], VS = null, D = null, firstScroll = true;
 
-    function badge(category) {
-      const cat = CATEGORY[category] || { emoji: '📌', label: category, color: 'slate' };
-      const cls = BADGE_CLASSES[cat.color] || BADGE_CLASSES.slate;
-      return `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${cls}">${cat.emoji} ${cat.label}</span>`;
-    }
+  /* ── Date Utils ──────────────────────────────────────────── */
+  const sod = d => { const r=new Date(d); r.setHours(0,0,0,0); return r; };
+  const addD = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
+  const addH = (d,n) => new Date(d.getTime()+n*36e5);
+  const isWE = d => d.getDay()===0||d.getDay()===6;
+  const same = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+  const isNow = d => same(d,new Date());
+  const WD = ['일','월','화','수','목','금','토'];
 
-    function categoryEmoji(category) {
-      return (CATEGORY[category] || { emoji: '📌' }).emoji;
-    }
+  function sow(d) {
+    const r=sod(d), dy=r.getDay(), diff=dy===0?6:dy-1;
+    r.setDate(r.getDate()-diff); return r;
+  }
 
-    // --- Dark Mode ---
-    function initTheme() {
-      const stored = localStorage.getItem('theme');
-      if (stored === 'light') {
-        document.documentElement.classList.remove('dark');
-      } else if (stored === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        // default to dark
-        document.documentElement.classList.add('dark');
+  function fmtD(d) { return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
+  function fmtShort(d) { return `${d.getMonth()+1}/${d.getDate()}`; }
+
+  function fmtRange(s,e) {
+    const end = addD(e,-1);
+    if (same(s,end)) return fmtD(s);
+    return `${fmtD(s)} – ${String(end.getMonth()+1).padStart(2,'0')}.${String(end.getDate()).padStart(2,'0')}`;
+  }
+
+  function relT(iso) {
+    if (!iso) return '';
+    const d = Math.floor((Date.now()-new Date(iso).getTime())/1000);
+    if (d<60) return '방금 전';
+    if (d<3600) return `${Math.floor(d/60)}분 전`;
+    if (d<86400) return `${Math.floor(d/3600)}시간 전`;
+    return `${Math.floor(d/86400)}일 전`;
+  }
+
+  /* ── Theme ───────────────────────────────────────────────── */
+  function initTheme() {
+    const s=localStorage.getItem('theme');
+    if (s==='light') document.documentElement.classList.remove('dark');
+    else document.documentElement.classList.add('dark');
+    updIco();
+  }
+  function updIco() {
+    const dk=document.documentElement.classList.contains('dark');
+    document.getElementById('moonIco').classList.toggle('hidden',dk);
+    document.getElementById('sunIco').classList.toggle('hidden',!dk);
+  }
+  document.getElementById('themeBtn').onclick = () => {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', document.documentElement.classList.contains('dark')?'dark':'light');
+    updIco();
+  };
+  initTheme();
+
+  /* ── Columns ─────────────────────────────────────────────── */
+  function getCols() {
+    const cols = [];
+    if (Z.unit==='hour') {
+      for (let d=0; d<Z.days; d++) {
+        const day = addD(VS,d);
+        for (let h=0; h<24; h++) {
+          const showHr = Z.days===1 ? h%2===0 : h%6===0;
+          cols.push({
+            dt: addH(day,h), w: Z.cpx,
+            lbl: showHr ? `${String(h).padStart(2,'0')}:00` : '',
+            dayLbl: h===0 ? `${day.getMonth()+1}/${day.getDate()} ${WD[day.getDay()]}` : null,
+            we: isWE(day), td: isNow(day), major: h===0,
+          });
+        }
       }
-      updateThemeIcon();
+    } else {
+      for (let d=0; d<Z.days; d++) {
+        const day = addD(VS,d);
+        cols.push({
+          dt: day, w: Z.cpx,
+          lbl: Z.days<=7 ? `${day.getMonth()+1}/${day.getDate()} ${WD[day.getDay()]}` :
+               Z.days<=14 ? `${day.getDate()} ${WD[day.getDay()]}` :
+               `${day.getDate()}`,
+          dayLbl: Z.days>14 && day.getDate()===1 ? `${day.getMonth()+1}월` : null,
+          we: isWE(day), td: isNow(day), major: day.getDay()===1,
+        });
+      }
+    }
+    return cols;
+  }
+
+  /* ── Task date range ─────────────────────────────────────── */
+  function taskRange(t) {
+    const now = new Date();
+    let s = t.started_at ? new Date(t.started_at) : new Date(t.updated_at||now);
+    let e;
+    if (t.due_date) {
+      e = new Date(t.due_date+'T23:59:59');
+    } else if (t.status==='done') {
+      e = new Date(t.updated_at||now);
+    } else {
+      e = now;
+    }
+    if (e<=s) e = addD(s,1);
+    return {s,e};
+  }
+
+  /* ── Render ──────────────────────────────────────────────── */
+  function render() {
+    // Zoom bar
+    document.getElementById('zoomBar').innerHTML = ZOOMS.map(z =>
+      `<button onclick="setZ('${z.id}')" class="px-3 py-1.5 text-xs font-medium transition-colors ${z.id===Z.id?'bg-foreground text-background':'hover:bg-accent text-muted-foreground'}">${z.label}</button>`
+    ).join('');
+
+    // Range label
+    document.getElementById('rangeLabel').textContent = fmtRange(VS, addD(VS,Z.days));
+
+    if (!D) return;
+    const cols = getCols();
+    const tasks = D.tasks||[];
+    const tw = cols.reduce((s,c)=>s+c.w,0);
+    const ve = addD(VS,Z.days);
+    const dur = ve.getTime()-VS.getTime();
+
+    // Date header
+    {
+      let h = '';
+      cols.forEach(c => {
+        const tdCls = c.td ? 'bg-blue-500/10 text-blue-500 font-semibold' : '';
+        const weCls = c.we && !c.td ? 'bg-muted/30' : '';
+        const bCls = c.major ? 'border-border' : 'border-border/30';
+        h += `<div class="shrink-0 flex items-center justify-center text-[11px] text-muted-foreground border-r ${bCls} ${weCls} ${tdCls}" style="width:${c.w}px">${c.lbl}</div>`;
+      });
+      const hdr = document.getElementById('tHeader');
+      hdr.innerHTML = h;
+      hdr.style.width = tw+'px';
     }
 
-    function updateThemeIcon() {
-      const isDark = document.documentElement.classList.contains('dark');
-      document.getElementById('icon-moon').classList.toggle('hidden', isDark);
-      document.getElementById('icon-sun').classList.toggle('hidden', !isDark);
-    }
-
-    document.getElementById('theme-toggle').addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-      updateThemeIcon();
-    });
-
-    initTheme();
-
-    // --- Render ---
-    function renderSchedule(schedule) {
-      if (!schedule || schedule.length === 0) return '<p class="text-sm text-muted-foreground">오늘 일정이 없습니다.</p>';
-
-      const now = nowMinutes();
-      const startMin = timeToMinutes(schedule[0].time);
-      const endMin = timeToMinutes(schedule[schedule.length - 1].time) + 60;
-      const totalRange = endMin - startMin;
-
-      let items = schedule.map(s => {
-        const min = timeToMinutes(s.time);
-        const isPast = now > min + 30;
-        const isCurrent = now >= min && now <= min + 60;
-        return `
-          <div class="relative flex items-start gap-3 py-3 ${isPast ? 'opacity-50' : ''}">
-            <div class="relative z-10 flex h-3 w-3 mt-1.5 shrink-0">
-              ${isCurrent
-                ? `<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                   <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>`
-                : `<span class="relative inline-flex rounded-full h-3 w-3 ${isPast ? 'bg-muted-foreground/30' : 'bg-muted-foreground/50'}"></span>`
-              }
-            </div>
-            <div>
-              <span class="text-xs font-medium text-muted-foreground">${s.time}</span>
-              <p class="text-sm font-medium ${isCurrent ? 'text-foreground' : ''}">${s.label}</p>
+    // Labels
+    {
+      if (tasks.length===0) {
+        document.getElementById('labels').innerHTML = `<div class="flex items-center justify-center text-sm text-muted-foreground" style="height:${RH*2}px">작업 없음</div>`;
+      } else {
+        document.getElementById('labels').innerHTML = tasks.map(t => {
+          const cat = CAT[t.category]||{e:'📌',l:t.category};
+          const st = STAT[t.status]||{l:t.status,dot:'bg-gray-400'};
+          return `<div class="flex items-center gap-2 px-3 border-b border-border/50" style="height:${RH}px">
+            <span class="text-sm shrink-0">${cat.e}</span>
+            <div class="min-w-0 flex-1">
+              <div class="text-[13px] font-medium truncate leading-tight">${t.title}</div>
+              <div class="flex items-center gap-1 mt-0.5">
+                <span class="h-1.5 w-1.5 rounded-full ${st.dot} shrink-0"></span>
+                <span class="text-[10px] text-muted-foreground">${st.l}${t.progress>0&&t.progress<100?' · '+t.progress+'%':''}</span>
+              </div>
             </div>
           </div>`;
-      }).join('');
-
-      // NOW line position
-      let nowLine = '';
-      if (now >= startMin && now <= endMin) {
-        const pct = ((now - startMin) / totalRange) * 100;
-        nowLine = `<div class="now-line" style="top: ${pct}%"></div>`;
+        }).join('');
       }
-
-      return `<div class="schedule-line relative pl-4">${nowLine}${items}</div>`;
     }
 
-    function renderTaskCard(task) {
-      const cat = CATEGORY[task.category] || { emoji: '📌', label: task.category, color: 'slate' };
-      const progressColor = task.status === 'done' ? 'bg-green-500' : task.status === 'blocked' ? 'bg-red-500' : 'bg-green-500';
-      const timeStr = relativeTime(task.updated_at);
+    // Timeline body
+    {
+      // Grid bg
+      let g = '<div class="absolute inset-0 flex pointer-events-none">';
+      cols.forEach(c => {
+        const tdCls = c.td ? 'bg-blue-500/[0.03]' : '';
+        const weCls = c.we && !c.td ? 'bg-muted/15' : '';
+        const bCls = c.major ? 'border-border/60' : 'border-border/20';
+        g += `<div class="shrink-0 h-full border-r ${bCls} ${weCls} ${tdCls}" style="width:${c.w}px"></div>`;
+      });
+      g += '</div>';
 
-      return `
-        <div class="rounded-lg border border-border bg-card p-4 space-y-3">
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="text-base shrink-0">${cat.emoji}</span>
-              <h3 class="text-sm font-semibold truncate">${task.title}</h3>
-            </div>
-            ${badge(task.category)}
-          </div>
-          ${task.note ? `<p class="text-xs text-muted-foreground">${task.note}</p>` : ''}
-          ${task.status !== 'waiting' ? `
-          <div class="space-y-1">
-            <div class="flex items-center justify-between text-xs text-muted-foreground">
-              <span>${task.progress}%</span>
-              ${timeStr ? `<span>${timeStr}</span>` : ''}
-            </div>
-            <div class="h-2 w-full rounded-full bg-muted">
-              <div class="h-full rounded-full ${progressColor} transition-all duration-500" style="width: ${task.progress}%"></div>
-            </div>
-          </div>` : `
-          <div class="flex items-center justify-between text-xs text-muted-foreground">
-            <span>대기중</span>
-            ${timeStr ? `<span>${timeStr}</span>` : ''}
-          </div>`}
-        </div>`;
-    }
+      // Rows
+      let rows = '';
+      tasks.forEach((t,i) => {
+        const {s,e} = taskRange(t);
+        const l = Math.max(0, (s.getTime()-VS.getTime())/dur);
+        const r = Math.min(1, (e.getTime()-VS.getTime())/dur);
+        let bar = '';
+        if (r>0 && l<1) {
+          const lp = l*tw, wp = Math.max(6,(r-l)*tw);
+          const cat = CAT[t.category]||{c:'148 163 184'};
+          const rgb = cat.c;
+          const oe = !t.due_date && (t.status==='in_progress'||t.status==='blocked');
 
-    function renderSection(title, tasks, emptyMsg) {
-      const content = tasks.length > 0
-        ? `<div class="space-y-3">${tasks.map(renderTaskCard).join('')}</div>`
-        : `<p class="text-sm text-muted-foreground py-2">${emptyMsg}</p>`;
-      return `
-        <section>
-          <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
-            <h2 class="text-base font-semibold mb-4">${title}</h2>
-            ${content}
-          </div>
-        </section>`;
-    }
+          let bgStyle='', borderStyle='', fillStyle='', extra='';
+          if (t.status==='in_progress') {
+            bgStyle = `background:rgba(${rgb},0.12)`;
+            borderStyle = `border:1px solid rgba(${rgb},0.35)`;
+            fillStyle = `background:rgba(${rgb},0.4)`;
+          } else if (t.status==='blocked') {
+            bgStyle = `background:rgba(239,68,68,0.06)`;
+            borderStyle = `border:1px solid rgba(239,68,68,0.35)`;
+            fillStyle = `background:rgba(239,68,68,0.3)`;
+            extra = 'bar-stripe';
+          } else if (t.status==='done') {
+            bgStyle = `background:rgba(${rgb},0.08)`;
+            borderStyle = `border:1px solid rgba(${rgb},0.2)`;
+            fillStyle = `background:rgba(${rgb},0.25)`;
+          } else { // waiting
+            bgStyle = `background:rgba(${rgb},0.06)`;
+            borderStyle = `border:1px dashed rgba(${rgb},0.3)`;
+            fillStyle = `background:rgba(${rgb},0.15)`;
+            extra = 'bar-dash';
+          }
 
-    function render(data) {
-      const tasks = data.tasks || [];
-      const inProgress = tasks.filter(t => t.status === 'in_progress');
-      const waitingBlocked = tasks.filter(t => t.status === 'waiting' || t.status === 'blocked');
-      const done = tasks.filter(t => t.status === 'done');
+          const rCls = oe ? 'rounded-l-[4px] rounded-r-none border-r-0' : 'rounded-[4px]';
+          const txtFit = wp > 80;
+          const pct = t.progress||0;
 
-      const html = `
-        <section>
-          <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
-            <h2 class="text-base font-semibold mb-4">📅 오늘 일정</h2>
-            ${renderSchedule(data.schedule)}
-          </div>
-        </section>
+          bar = `<div class="gantt-bar absolute top-1.5 bottom-1.5 ${rCls} ${extra} cursor-pointer overflow-hidden"
+            style="left:${lp}px;width:${wp}px;${bgStyle};${borderStyle}"
+            data-i="${i}" onmouseenter="showTip(event,${i})" onmouseleave="hideTip()">
+            <div class="h-full ${oe?'rounded-l-[3px]':'rounded-[3px]'} transition-all" style="width:${pct}%;${fillStyle}"></div>
+            ${txtFit?`<span class="absolute inset-0 flex items-center px-2 text-[11px] font-medium truncate" style="color:rgba(${rgb},0.9)">${t.title}</span>`:''}
+          </div>`;
 
-        ${renderSection('🟢 진행중', inProgress, '현재 진행중인 작업이 없습니다.')}
-        ${renderSection('🟡 대기 · 🔴 차단', waitingBlocked, '대기 또는 차단된 작업이 없습니다.')}
-        ${renderSection('✅ 오늘 완료', done, '아직 완료된 작업이 없습니다.')}
-      `;
-
-      document.getElementById('dashboard-content').innerHTML = html;
-    }
-
-    // --- Data Fetching ---
-    let lastData = null;
-
-    function setOnline(updatedAt) {
-      const ind = document.getElementById('status-indicator');
-      ind.innerHTML = `
-        <span class="relative flex h-3 w-3">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-        </span>
-        <span id="status-text">Live</span>
-        <span class="text-muted-foreground/60" id="status-time">· ${relativeTime(updatedAt)}</span>`;
-    }
-
-    function setOffline() {
-      const ind = document.getElementById('status-indicator');
-      ind.innerHTML = `
-        <span class="relative flex h-3 w-3">
-          <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-        </span>
-        <span id="status-text" class="text-red-500">Offline</span>`;
-    }
-
-    async function fetchData() {
-      try {
-        const res = await fetch('data/status.json', { cache: 'no-store' });
-        if (!res.ok) throw new Error('fetch failed');
-        const data = await res.json();
-        lastData = data;
-        render(data);
-        setOnline(data.meta?.updated_at);
-      } catch (e) {
-        if (lastData) {
-          render(lastData);
+          if (oe) {
+            bar += `<div class="absolute top-1.5 bottom-1.5 pointer-events-none" style="left:${lp+wp}px;width:12px;border-top:1px dashed rgba(${rgb},0.3);border-bottom:1px dashed rgba(${rgb},0.3);"></div>`;
+          }
         }
-        setOffline();
+        rows += `<div class="relative border-b border-border/30 ${i%2?'bg-muted/[0.03]':''}" style="height:${RH}px">${bar}</div>`;
+      });
+
+      if (tasks.length===0) {
+        rows = `<div class="flex items-center justify-center text-sm text-muted-foreground" style="height:${RH*2}px;width:${tw}px">타임라인에 표시할 작업이 없습니다</div>`;
+      }
+
+      // NOW line
+      let now = '';
+      const np = (Date.now()-VS.getTime())/dur;
+      if (np>=0 && np<=1) {
+        const nx = np*tw;
+        now = `<div class="absolute top-0 bottom-0 z-20 pointer-events-none" style="left:${nx}px">
+          <div class="w-0.5 h-full bg-red-500/70"></div>
+          <div class="now-dot absolute -top-1.5 -left-[3px] w-2 h-2 bg-red-500 rounded-full ring-2 ring-card"></div>
+        </div>`;
+      }
+
+      const body = document.getElementById('tBody');
+      body.innerHTML = g + rows + now;
+      body.style.width = tw+'px';
+      document.getElementById('tWrap').style.width = tw+'px';
+    }
+
+    // Schedule
+    {
+      const sc = D.schedule||[];
+      const el = document.getElementById('sched');
+      if (!sc.length) { el.innerHTML='<span class="text-sm text-muted-foreground">오늘 일정이 없습니다</span>'; }
+      else {
+        const nm = new Date().getHours()*60+new Date().getMinutes();
+        el.innerHTML = sc.map(s => {
+          const [h,m] = s.time.split(':').map(Number);
+          const min = h*60+m;
+          const past = nm>min+60, cur = nm>=min&&nm<min+60;
+          return `<div class="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 ${past?'opacity-35':''} ${cur?'border-blue-500/50 bg-blue-500/5':''}">
+            <span class="text-xs font-mono font-semibold ${cur?'text-blue-500':'text-muted-foreground'}">${s.time}</span>
+            <span class="text-sm">${s.label}</span>
+            ${cur?'<span class="relative flex h-2 w-2 ml-1"><span class="animate-ping absolute h-full w-full rounded-full bg-blue-400 opacity-75"></span><span class="relative rounded-full h-2 w-2 bg-blue-500"></span></span>':''}
+          </div>`;
+        }).join('');
       }
     }
 
-    // Initial load
-    fetchData();
+    // Scroll to NOW on first load
+    if (firstScroll) {
+      firstScroll = false;
+      requestAnimationFrame(() => scrollNow());
+    }
+  }
 
-    // Auto-refresh every 30 seconds
-    setInterval(fetchData, 30000);
+  function scrollNow() {
+    const sc = document.getElementById('tScroll');
+    const dur = addD(VS,Z.days).getTime()-VS.getTime();
+    const np = (Date.now()-VS.getTime())/dur;
+    if (np>=0&&np<=1) {
+      const tw = parseInt(document.getElementById('tWrap').style.width)||0;
+      sc.scrollLeft = Math.max(0, np*tw - sc.offsetWidth/3);
+    }
+  }
+
+  /* ── Tooltip ─────────────────────────────────────────────── */
+  function showTip(ev,i) {
+    const t = D.tasks[i];
+    const cat = CAT[t.category]||{e:'📌',l:t.category};
+    const st = STAT[t.status]||{l:t.status};
+    const {s,e} = taskRange(t);
+    const tip = document.getElementById('tip');
+    tip.innerHTML = `<div class="font-semibold mb-1">${cat.e} ${t.title}</div>
+      <div class="space-y-0.5 text-xs text-muted-foreground">
+        <div><span class="inline-block h-1.5 w-1.5 rounded-full ${st.dot||'bg-gray-400'} mr-1"></span>${st.l} · ${t.progress||0}%</div>
+        <div>📅 ${fmtShort(s)} → ${t.due_date?fmtShort(e):'미정'}</div>
+        ${t.note?`<div class="mt-1 text-card-foreground/80">${t.note}</div>`:''}
+        <div class="mt-1 opacity-60">${relT(t.updated_at)} 업데이트</div>
+      </div>`;
+    tip.classList.remove('hidden');
+    const r = tip.getBoundingClientRect();
+    let x=ev.clientX+10, y=ev.clientY+10;
+    if (x+r.width>innerWidth) x=ev.clientX-r.width-10;
+    if (y+r.height>innerHeight) y=ev.clientY-r.height-10;
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  }
+  function hideTip() { document.getElementById('tip').classList.add('hidden'); }
+
+  /* ── Status indicator ────────────────────────────────────── */
+  function setOnline(t) {
+    document.getElementById('live').innerHTML=`<span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative rounded-full h-2.5 w-2.5 bg-green-500"></span></span><span>Live</span><span class="opacity-50">· ${relT(t)}</span>`;
+  }
+  function setOff() {
+    document.getElementById('live').innerHTML=`<span class="relative flex h-2.5 w-2.5"><span class="relative rounded-full h-2.5 w-2.5 bg-red-500"></span></span><span class="text-red-500">Offline</span>`;
+  }
+
+  /* ── Navigation ──────────────────────────────────────────── */
+  function nav(dir) { VS=addD(VS, dir*Z.step); firstScroll=true; render(); }
+
+  function goToday() {
+    const td = sod(new Date());
+    if (Z.unit==='hour') VS=td;
+    else if (Z.days<=7) VS=sow(td);
+    else if (Z.days<=14) VS=addD(sow(td),-3);
+    else VS=addD(td,-7);
+    firstScroll=true; render();
+  }
+
+  function setZ(id) {
+    const z=ZOOMS.find(z=>z.id===id); if(!z)return;
+    Z=z; goToday();
+  }
+
+  /* ── Data ────────────────────────────────────────────────── */
+  async function fetchData() {
+    try {
+      const r=await fetch('data/status.json',{cache:'no-store'});
+      if(!r.ok) throw 0;
+      D=await r.json();
+      setOnline(D.meta?.updated_at);
+      render();
+    } catch { setOff(); if(D) render(); }
+  }
+
+  /* ── Init ────────────────────────────────────────────────── */
+  Z=ZOOMS[2]; goToday(); fetchData();
+  setInterval(fetchData, 30000);
+  document.addEventListener('keydown', e => {
+    if(e.key==='ArrowLeft') nav(-1);
+    if(e.key==='ArrowRight') nav(1);
+    if(e.key==='t'||e.key==='T') goToday();
+  });
   </script>
 </body>
 </html>
