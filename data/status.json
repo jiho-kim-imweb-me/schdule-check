@@ -167,6 +167,17 @@
       "updated_at": "2026-02-09T16:00:00+09:00",
       "progress": 0,
       "note": "민감정보 없음 확인 완료. GitHub Pro 필요 여부 확인 후 전환 예정"
+    },
+    {
+      "id": "task-013",
+      "title": "Flink 실시간 파이프라인 구축",
+      "status": "waiting",
+      "category": "infra",
+      "started_at": null,
+      "due_date": "2026-02-28",
+      "updated_at": "2026-02-09T17:00:00+09:00",
+      "progress": 0,
+      "note": "기존 작업(SDK 마이그레이션, Query-Gom) 완료 후 착수 예정"
     }
   ]
 }
