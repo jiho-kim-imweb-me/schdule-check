@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jiho's Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            border: 'hsl(var(--border))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+          },
+          borderRadius: { lg: '0.5rem', md: 'calc(0.5rem - 2px)', sm: 'calc(0.5rem - 4px)' },
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --border: 240 5.9% 90%;
+      --accent: 240 4.8% 95.9%;
+    }
+    .dark {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --border: 240 3.7% 15.9%;
+      --accent: 240 3.7% 15.9%;
+    }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+    }
+    .schedule-line {
+      position: relative;
+    }
+    .schedule-line::before {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: hsl(var(--border));
+    }
+    .now-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #ef4444;
+      z-index: 10;
+    }
+    .now-line::before {
+      content: 'NOW';
+      position: absolute;
+      right: 0;
+      top: -10px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #ef4444;
+      letter-spacing: 0.05em;
+    }
+    .now-line::after {
+      content: '';
+      position: absolute;
+      left: -3px;
+      top: -3px;
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-background text-foreground antialiased">
+  <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Jiho's Dashboard</h1>
+          <p class="mt-1 text-sm text-muted-foreground">오늘 하루 작업 현황을 실시간으로 확인하세요</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div id="status-indicator" class="flex items-center gap-2 text-xs text-muted-foreground">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span id="status-text">Live</span>
+            <span class="text-muted-foreground/60" id="status-time"></span>
+          </div>
+          <button id="theme-toggle" class="rounded-md border border-border p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" aria-label="테마 전환">
+            <svg id="icon-moon" class="h-4 w-4 hidden" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 006.002-2.082 9.718 9.718 0 003-3.916z"/></svg>
+            <svg id="icon-sun" class="h-4 w-4 hidden" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="space-y-6" id="dashboard-content">
+      <div class="flex items-center justify-center py-20 text-muted-foreground">
+        <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+        데이터를 불러오는 중...
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-10 border-t border-border pt-6 text-center text-xs text-muted-foreground">
+      30초마다 자동 갱신 · Powered by GitHub Pages
+    </footer>
+  </div>
+
+  <script>
+    // --- Constants ---
+    const CATEGORY = {
+      analysis:   { emoji: '📊', label: '분석',     color: 'blue' },
+      infra:      { emoji: '⚙️', label: '인프라',   color: 'purple' },
+      incident:   { emoji: '🔴', label: '장애',     color: 'red' },
+      cost:       { emoji: '💰', label: '비용',     color: 'amber' },
+      security:   { emoji: '🔒', label: '보안',     color: 'rose' },
+      automation: { emoji: '🤖', label: '자동화',   color: 'cyan' },
+      monitoring: { emoji: '📡', label: '모니터링', color: 'orange' },
+      docs:       { emoji: '📝', label: '문서화',   color: 'slate' },
+    };
+
+    const BADGE_CLASSES = {
+      blue:   'bg-blue-500/10 text-blue-500 dark:bg-blue-400/10 dark:text-blue-400',
+      purple: 'bg-purple-500/10 text-purple-500 dark:bg-purple-400/10 dark:text-purple-400',
+      red:    'bg-red-500/10 text-red-500 dark:bg-red-400/10 dark:text-red-400',
+      amber:  'bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400',
+      rose:   'bg-rose-500/10 text-rose-500 dark:bg-rose-400/10 dark:text-rose-400',
+      cyan:   'bg-cyan-500/10 text-cyan-600 dark:bg-cyan-400/10 dark:text-cyan-400',
+      orange: 'bg-orange-500/10 text-orange-500 dark:bg-orange-400/10 dark:text-orange-400',
+      slate:  'bg-slate-500/10 text-slate-500 dark:bg-slate-400/10 dark:text-slate-400',
+    };
+
+    // --- Utility ---
+    function relativeTime(isoString) {
+      if (!isoString) return '';
+      const now = new Date();
+      const target = new Date(isoString);
+      const diffMs = now - target;
+      const diffSec = Math.floor(diffMs / 1000);
+      if (diffSec < 60) return '방금 전';
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}분 전`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}시간 전`;
+      const diffDay = Math.floor(diffHr / 24);
+      return `${diffDay}일 전`;
+    }
+
+    function timeToMinutes(t) {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function nowMinutes() {
+      const n = new Date();
+      return n.getHours() * 60 + n.getMinutes();
+    }
+
+    function badge(category) {
+      const cat = CATEGORY[category] || { emoji: '📌', label: category, color: 'slate' };
+      const cls = BADGE_CLASSES[cat.color] || BADGE_CLASSES.slate;
+      return `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${cls}">${cat.emoji} ${cat.label}</span>`;
+    }
+
+    function categoryEmoji(category) {
+      return (CATEGORY[category] || { emoji: '📌' }).emoji;
+    }
+
+    // --- Dark Mode ---
+    function initTheme() {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'light') {
+        document.documentElement.classList.remove('dark');
+      } else if (stored === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        // default to dark
+        document.documentElement.classList.add('dark');
+      }
+      updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.getElementById('icon-moon').classList.toggle('hidden', isDark);
+      document.getElementById('icon-sun').classList.toggle('hidden', !isDark);
+    }
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      updateThemeIcon();
+    });
+
+    initTheme();
+
+    // --- Render ---
+    function renderSchedule(schedule) {
+      if (!schedule || schedule.length === 0) return '<p class="text-sm text-muted-foreground">오늘 일정이 없습니다.</p>';
+
+      const now = nowMinutes();
+      const startMin = timeToMinutes(schedule[0].time);
+      const endMin = timeToMinutes(schedule[schedule.length - 1].time) + 60;
+      const totalRange = endMin - startMin;
+
+      let items = schedule.map(s => {
+        const min = timeToMinutes(s.time);
+        const isPast = now > min + 30;
+        const isCurrent = now >= min && now <= min + 60;
+        return `
+          <div class="relative flex items-start gap-3 py-3 ${isPast ? 'opacity-50' : ''}">
+            <div class="relative z-10 flex h-3 w-3 mt-1.5 shrink-0">
+              ${isCurrent
+                ? `<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                   <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>`
+                : `<span class="relative inline-flex rounded-full h-3 w-3 ${isPast ? 'bg-muted-foreground/30' : 'bg-muted-foreground/50'}"></span>`
+              }
+            </div>
+            <div>
+              <span class="text-xs font-medium text-muted-foreground">${s.time}</span>
+              <p class="text-sm font-medium ${isCurrent ? 'text-foreground' : ''}">${s.label}</p>
+            </div>
+          </div>`;
+      }).join('');
+
+      // NOW line position
+      let nowLine = '';
+      if (now >= startMin && now <= endMin) {
+        const pct = ((now - startMin) / totalRange) * 100;
+        nowLine = `<div class="now-line" style="top: ${pct}%"></div>`;
+      }
+
+      return `<div class="schedule-line relative pl-4">${nowLine}${items}</div>`;
+    }
+
+    function renderTaskCard(task) {
+      const cat = CATEGORY[task.category] || { emoji: '📌', label: task.category, color: 'slate' };
+      const progressColor = task.status === 'done' ? 'bg-green-500' : task.status === 'blocked' ? 'bg-red-500' : 'bg-green-500';
+      const timeStr = relativeTime(task.updated_at);
+
+      return `
+        <div class="rounded-lg border border-border bg-card p-4 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-base shrink-0">${cat.emoji}</span>
+              <h3 class="text-sm font-semibold truncate">${task.title}</h3>
+            </div>
+            ${badge(task.category)}
+          </div>
+          ${task.note ? `<p class="text-xs text-muted-foreground">${task.note}</p>` : ''}
+          ${task.status !== 'waiting' ? `
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-xs text-muted-foreground">
+              <span>${task.progress}%</span>
+              ${timeStr ? `<span>${timeStr}</span>` : ''}
+            </div>
+            <div class="h-2 w-full rounded-full bg-muted">
+              <div class="h-full rounded-full ${progressColor} transition-all duration-500" style="width: ${task.progress}%"></div>
+            </div>
+          </div>` : `
+          <div class="flex items-center justify-between text-xs text-muted-foreground">
+            <span>대기중</span>
+            ${timeStr ? `<span>${timeStr}</span>` : ''}
+          </div>`}
+        </div>`;
+    }
+
+    function renderSection(title, tasks, emptyMsg) {
+      const content = tasks.length > 0
+        ? `<div class="space-y-3">${tasks.map(renderTaskCard).join('')}</div>`
+        : `<p class="text-sm text-muted-foreground py-2">${emptyMsg}</p>`;
+      return `
+        <section>
+          <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+            <h2 class="text-base font-semibold mb-4">${title}</h2>
+            ${content}
+          </div>
+        </section>`;
+    }
+
+    function render(data) {
+      const tasks = data.tasks || [];
+      const inProgress = tasks.filter(t => t.status === 'in_progress');
+      const waitingBlocked = tasks.filter(t => t.status === 'waiting' || t.status === 'blocked');
+      const done = tasks.filter(t => t.status === 'done');
+
+      const html = `
+        <section>
+          <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+            <h2 class="text-base font-semibold mb-4">📅 오늘 일정</h2>
+            ${renderSchedule(data.schedule)}
+          </div>
+        </section>
+
+        ${renderSection('🟢 진행중', inProgress, '현재 진행중인 작업이 없습니다.')}
+        ${renderSection('🟡 대기 · 🔴 차단', waitingBlocked, '대기 또는 차단된 작업이 없습니다.')}
+        ${renderSection('✅ 오늘 완료', done, '아직 완료된 작업이 없습니다.')}
+      `;
+
+      document.getElementById('dashboard-content').innerHTML = html;
+    }
+
+    // --- Data Fetching ---
+    let lastData = null;
+
+    function setOnline(updatedAt) {
+      const ind = document.getElementById('status-indicator');
+      ind.innerHTML = `
+        <span class="relative flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>
+        <span id="status-text">Live</span>
+        <span class="text-muted-foreground/60" id="status-time">· ${relativeTime(updatedAt)}</span>`;
+    }
+
+    function setOffline() {
+      const ind = document.getElementById('status-indicator');
+      ind.innerHTML = `
+        <span class="relative flex h-3 w-3">
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+        </span>
+        <span id="status-text" class="text-red-500">Offline</span>`;
+    }
+
+    async function fetchData() {
+      try {
+        const res = await fetch('data/status.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('fetch failed');
+        const data = await res.json();
+        lastData = data;
+        render(data);
+        setOnline(data.meta?.updated_at);
+      } catch (e) {
+        if (lastData) {
+          render(lastData);
+        }
+        setOffline();
+      }
+    }
+
+    // Initial load
+    fetchData();
+
+    // Auto-refresh every 30 seconds
+    setInterval(fetchData, 30000);
+  </script>
+</body>
+</html>

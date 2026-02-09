@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "owner": "Jiho Kim",
+    "title": "Jiho's Dashboard",
+    "updated_at": "2026-02-09T15:30:00+09:00",
+    "updated_by": "claude-session-a"
+  },
+  "schedule": [
+    { "time": "09:00", "label": "데일리 스탠드업" },
+    { "time": "11:00", "label": "인프라팀 주간 회의" },
+    { "time": "14:00", "label": "비용 최적화 미팅" },
+    { "time": "16:00", "label": "장애 회고 리뷰" }
+  ],
+  "tasks": [
+    {
+      "id": "task-001",
+      "title": "RDS 슬로우쿼리 분석",
+      "status": "in_progress",
+      "category": "analysis",
+      "started_at": "2026-02-09T10:30:00+09:00",
+      "updated_at": "2026-02-09T15:30:00+09:00",
+      "progress": 65,
+      "note": "최근 24시간 TOP 20 쿼리 분석중"
+    },
+    {
+      "id": "task-002",
+      "title": "EKS 노드그룹 스케일링",
+      "status": "blocked",
+      "category": "infra",
+      "started_at": "2026-02-09T09:00:00+09:00",
+      "updated_at": "2026-02-09T11:00:00+09:00",
+      "progress": 20,
+      "note": "비용 승인 대기중"
+    },
+    {
+      "id": "task-003",
+      "title": "Grafana 알림 튜닝",
+      "status": "done",
+      "category": "monitoring",
+      "started_at": "2026-02-09T09:30:00+09:00",
+      "updated_at": "2026-02-09T11:30:00+09:00",
+      "progress": 100,
+      "note": "노이즈 알림 50% 감소 완료"
+    },
+    {
+      "id": "task-004",
+      "title": "CloudWatch 비용 리포트 생성",
+      "status": "waiting",
+      "category": "cost",
+      "started_at": null,
+      "updated_at": "2026-02-09T08:00:00+09:00",
+      "progress": 0,
+      "note": "월별 비용 트렌드 리포트 예정"
+    },
+    {
+      "id": "task-005",
+      "title": "배포 서버 SSH 키 로테이션",
+      "status": "in_progress",
+      "category": "security",
+      "started_at": "2026-02-09T13:00:00+09:00",
+      "updated_at": "2026-02-09T14:30:00+09:00",
+      "progress": 40,
+      "note": "프로덕션 서버 3대 중 1대 완료"
+    }
+  ]
+}
